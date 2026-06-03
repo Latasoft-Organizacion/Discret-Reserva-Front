@@ -676,19 +676,43 @@
 
 .client-rating-textarea {
   position: relative;
-  display: block;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: rgba(8, 13, 24, 0.74);
+  transition: 0.2s ease;
 }
 
 .client-rating-textarea svg {
-  position: absolute;
-  top: 23px;
-  left: 20px;
+  position: static;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
   pointer-events: none;
 }
 
 .client-rating-textarea textarea {
-  padding: 20px 18px 18px 64px;
   min-height: 118px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.client-rating-textarea:focus-within {
+  border-color: #ec4899;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.12);
+}
+
+.client-rating-textarea textarea:focus {
+  box-shadow: none;
 }
 
 .client-rating-actions {

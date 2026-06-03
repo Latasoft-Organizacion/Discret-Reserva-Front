@@ -1,5 +1,5 @@
-import { type FormEvent, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -11,6 +11,8 @@ import {
   Sparkles,
   Star,
 } from 'lucide-react';
+
+import { ApiError, api } from '../services/api';
 import '../styles/reservations.css';
 
 const ratingLabels = [
@@ -29,24 +31,68 @@ const ratingTags = [
   'Volvería',
 ];
 
+const formatCheckout = (value: string) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('es-CL', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
 function ClientRatingPage() {
   const navigate = useNavigate();
+  const { token: tokenParam } = useParams();
   const [searchParams] = useSearchParams();
-  const reservationId = searchParams.get('reserva') || 'DIS-2026-0018';
-  const roomName = searchParams.get('habitacion') || 'Suite temática';
-  const checkoutTime = searchParams.get('salida') || '20:30';
+  const token = tokenParam || searchParams.get('token') || '';
 
+  const [reservationId, setReservationId] = useState(searchParams.get('reserva') || 'Reserva pendiente');
+  const [roomName, setRoomName] = useState(searchParams.get('habitacion') || 'Habitación pendiente');
+  const [checkoutTime, setCheckoutTime] = useState(searchParams.get('salida') || 'Salida pendiente');
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [comment, setComment] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(Boolean(token));
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentRatingText = useMemo(() => {
     const activeRating = hoverRating || rating;
     return activeRating ? ratingLabels[activeRating - 1] : 'Selecciona una valoración';
   }, [hoverRating, rating]);
+
+  useEffect(() => {
+    if (!token) {
+      setMessage('Este enlace de valoración no tiene un token válido.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    api.obtenerValoracionPorToken(token)
+      .then((response) => {
+        setReservationId(response.reserva.codigo_reserva);
+        setRoomName(response.reserva.habitacion);
+        setCheckoutTime(formatCheckout(response.reserva.fecha_salida));
+
+        if (response.respondida) {
+          setIsSubmitted(true);
+          setMessage('Esta valoración ya fue enviada anteriormente.');
+        }
+      })
+      .catch(() => {
+        setMessage('No pudimos cargar la reserva asociada a esta valoración.');
+      })
+      .finally(() => setIsLoading(false));
+  }, [token]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((current) =>
@@ -56,16 +102,39 @@ function ClientRatingPage() {
     );
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!token) {
+      setMessage('Este enlace de valoración no tiene un token válido.');
+      return;
+    }
 
     if (!rating) {
       setMessage('Selecciona una valoración para enviar tu experiencia.');
       return;
     }
 
-    setIsSubmitted(true);
-    setMessage('');
+    setIsSubmitting(true);
+
+    try {
+      await api.enviarValoracion(token, {
+        puntuacion: rating,
+        etiquetas: selectedTags,
+        comentario: comment.trim() || null,
+      });
+
+      setIsSubmitted(true);
+      setMessage('');
+    } catch (error) {
+      const errorMessage = error instanceof ApiError
+        ? Object.values(error.errors ?? {}).flat()[0] ?? error.message
+        : 'No se pudo enviar la valoración.';
+
+      setMessage(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -116,7 +185,12 @@ function ClientRatingPage() {
           </div>
         </div>
 
-        <form className="client-reservation-card client-rating-card" onSubmit={handleSubmit} noValidate>
+        <form
+          className="client-reservation-card client-rating-card"
+          onSubmit={handleSubmit}
+          noValidate
+          aria-busy={isLoading || isSubmitting}
+        >
           <div className="client-rating-heading">
             <Heart size={22} />
             <div>
@@ -125,7 +199,7 @@ function ClientRatingPage() {
             </div>
           </div>
 
-          <fieldset className="client-rating-stars">
+          <fieldset className="client-rating-stars" disabled={isLoading || isSubmitting || isSubmitted}>
             <legend>Valoración general</legend>
             <div className="client-rating-star-buttons" onMouseLeave={() => setHoverRating(0)}>
               {[1, 2, 3, 4, 5].map((value) => (
@@ -149,7 +223,7 @@ function ClientRatingPage() {
             <strong>{currentRatingText}</strong>
           </fieldset>
 
-          <fieldset className="client-rating-tags">
+          <fieldset className="client-rating-tags" disabled={isLoading || isSubmitting || isSubmitted}>
             <legend>¿Qué destacarías?</legend>
             <div>
               {ratingTags.map((tag) => (
@@ -174,6 +248,7 @@ function ClientRatingPage() {
               <textarea
                 value={comment}
                 placeholder="Cuéntanos algún detalle de tu experiencia..."
+                disabled={isLoading || isSubmitting || isSubmitted}
                 onChange={(event) => setComment(event.target.value)}
               />
             </span>
@@ -189,9 +264,9 @@ function ClientRatingPage() {
             <button type="button" className="cancel-reservation-btn" onClick={() => navigate('/')}>
               Omitir
             </button>
-            <button type="submit" className="save-reservation-btn">
+            <button type="submit" className="save-reservation-btn" disabled={isLoading || isSubmitting || isSubmitted}>
               <Send size={18} />
-              Enviar valoración
+              {isSubmitting ? 'Enviando...' : 'Enviar valoración'}
             </button>
           </div>
         </form>
@@ -211,7 +286,7 @@ function ClientRatingPage() {
             </div>
 
             <div className="client-register-success-copy">
-              <h3>¡Valoración enviada!</h3>
+              <h3>Valoración enviada</h3>
               <p>Gracias por compartir tu experiencia.</p>
               <strong>Tu opinión ayuda a mejorar cada reserva.</strong>
             </div>
@@ -223,7 +298,7 @@ function ClientRatingPage() {
               </span>
               <span>
                 <Star size={18} />
-                {rating} de 5 estrellas
+                {rating ? `${rating} de 5 estrellas` : 'Valoración ya registrada'}
               </span>
             </div>
 

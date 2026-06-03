@@ -287,6 +287,14 @@
   background: #f59e0b;
 }
 
+.agenda-card.finalizada::after {
+  background: #94a3b8;
+}
+
+.agenda-card.cancelada::after {
+  background: #ef4444;
+}
+
 
 /* =========================
    INFORMACION AGENDA
@@ -303,6 +311,13 @@
 
 .agenda-info h2 {
   font-size: 18px;
+}
+
+.agenda-info small {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
 }
 
 
@@ -331,6 +346,16 @@
 .agenda-status.pendiente {
   background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
+}
+
+.agenda-status.finalizada {
+  background: rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+}
+
+.agenda-status.cancelada {
+  background: rgba(239, 68, 68, 0.14);
+  color: #ef4444;
 }
 
 

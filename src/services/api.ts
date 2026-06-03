@@ -52,6 +52,7 @@ async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Pro
 
 export type Cliente = {
   id: number;
+  id_motel?: number | null;
   nombre: string;
   apellido: string;
   telefono: string;
@@ -81,8 +82,25 @@ export type LoginClienteResponse = {
   cliente: Cliente;
 };
 
+export type ClientesPaginatedResponse = {
+  data: Cliente[];
+  total: number;
+  current_page: number;
+  last_page: number;
+};
+
+export type CrearClienteAdminPayload = {
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  correo: string;
+  fecha_nacimiento: string;
+  mayor_edad_confirmado: boolean;
+};
+
 export type AdminUser = {
   id: number;
+  id_motel?: number | null;
   name: string;
   email: string;
 };
@@ -100,6 +118,7 @@ export type EstadoHabitacionApi = 'disponible' | 'ocupada' | 'limpieza' | 'mante
 
 export type TipoHabitacion = {
   id: number;
+  id_motel?: number;
   nombre: string;
   descripcion: string | null;
   precio_base: number;
@@ -108,6 +127,7 @@ export type TipoHabitacion = {
 
 export type Habitacion = {
   id: number;
+  id_motel?: number;
   tipo_habitacion_id: number;
   numero: string;
   nombre: string;
@@ -135,6 +155,7 @@ export type TipoPagoReservaApi = 'efectivo' | 'transferencia' | 'tarjeta' | 'onl
 export type Reserva = {
   id: number;
   codigo_reserva: string;
+  id_motel?: number;
   cliente_id: number | null;
   habitacion_id: number;
   nombre_cliente: string | null;
@@ -149,6 +170,7 @@ export type Reserva = {
   qr_token: string | null;
   cliente?: Cliente | null;
   habitacion?: Habitacion;
+  valoracion?: Valoracion | null;
 };
 
 export type ReservasPaginatedResponse = {
@@ -170,6 +192,78 @@ export type CrearReservaPayload = {
   estado?: EstadoReservaApi;
   tipo_pago?: TipoPagoReservaApi | null;
   comentario?: string | null;
+};
+
+export type Valoracion = {
+  id: number;
+  id_motel?: number | null;
+  reserva_id: number;
+  cliente_id: number | null;
+  puntuacion: number | null;
+  etiquetas: string[] | null;
+  comentario: string | null;
+  token: string;
+  enviada_at: string | null;
+  respondida_at: string | null;
+  created_at: string;
+  updated_at: string;
+  cliente?: Cliente | null;
+  reserva?: Reserva | null;
+};
+
+export type ValoracionesPaginatedResponse = {
+  data: Valoracion[];
+  total: number;
+  current_page: number;
+  last_page: number;
+};
+
+export type ValoracionTokenResponse = {
+  reserva: {
+    codigo_reserva: string;
+    habitacion: string;
+    fecha_salida: string;
+  };
+  respondida: boolean;
+};
+
+export type EnviarValoracionPayload = {
+  puntuacion: number;
+  etiquetas?: string[];
+  comentario?: string | null;
+};
+
+export type TipoReporteApi = 'DIARIO' | 'SEMANAL' | 'MENSUAL';
+
+export type EstadoReporteApi = 'GENERADO' | 'PENDIENTE' | 'ERROR';
+
+export type Reporte = {
+  id_reporte: number;
+  id_motel: number;
+  user_id: number;
+  tipo: TipoReporteApi;
+  fecha_inicio: string;
+  fecha_fin: string;
+  estado: EstadoReporteApi;
+  total_ingresos: string | number;
+  total_reservas: number;
+  ocupacion_promedio: string | number;
+  archivo_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ReportesPaginatedResponse = {
+  data: Reporte[];
+  total: number;
+  current_page: number;
+  last_page: number;
+};
+
+export type CrearReportePayload = {
+  tipo: TipoReporteApi;
+  fecha_inicio: string;
+  fecha_fin: string;
 };
 
 export function saveClientSession(cliente: Cliente) {
@@ -226,6 +320,24 @@ export const api = {
   registrarCliente(payload: RegistrarClientePayload) {
     return apiRequest<Cliente>('/clientes', {
       method: 'POST',
+      body: payload,
+    });
+  },
+
+  listarClientes() {
+    return apiRequest<ClientesPaginatedResponse>('/clientes');
+  },
+
+  crearCliente(payload: CrearClienteAdminPayload) {
+    return apiRequest<Cliente>('/clientes', {
+      method: 'POST',
+      body: payload,
+    });
+  },
+
+  actualizarCliente(id: number, payload: Partial<CrearClienteAdminPayload> & { activo?: boolean }) {
+    return apiRequest<Cliente>(`/clientes/${id}`, {
+      method: 'PATCH',
       body: payload,
     });
   },
@@ -287,6 +399,32 @@ export const api = {
   eliminarReserva(id: number) {
     return apiRequest<void>(`/reservas/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  listarValoraciones() {
+    return apiRequest<ValoracionesPaginatedResponse>('/valoraciones');
+  },
+
+  obtenerValoracionPorToken(token: string) {
+    return apiRequest<ValoracionTokenResponse>(`/valoraciones/${token}`);
+  },
+
+  enviarValoracion(token: string, payload: EnviarValoracionPayload) {
+    return apiRequest<Valoracion>(`/valoraciones/${token}`, {
+      method: 'POST',
+      body: payload,
+    });
+  },
+
+  listarReportes() {
+    return apiRequest<ReportesPaginatedResponse>('/reportes');
+  },
+
+  crearReporte(payload: CrearReportePayload) {
+    return apiRequest<Reporte>('/reportes', {
+      method: 'POST',
+      body: payload,
     });
   },
 };

@@ -44,6 +44,8 @@ const plans = [
       'WhatsApp',
       'Estados de habitaciones',
     ],
+    checkoutUrl:
+      'https://www.mercadopago.cl/subscriptions/checkout?preapproval_plan_id=7bd7bb4b9d6f4b889257fd5bf2087501',
   },
   {
     name: 'Plan Discret',
@@ -59,6 +61,8 @@ const plans = [
       'Estado de habitaciones',
     ],
     highlighted: true,
+    checkoutUrl:
+      'https://www.mercadopago.cl/subscriptions/checkout?preapproval_plan_id=7e762e68bee04fedbbef5ab98c3b8cca',
   },
 ];
 
@@ -203,7 +207,7 @@ function ClientLandingPage() {
     closeMenu();
   };
 
-  const handlePlanPurchase = (planName: string) => {
+  const handlePlanPurchase = (planName: string, checkoutUrl: string) => {
     closeMenu();
 
     if (!clientSession) {
@@ -215,7 +219,7 @@ function ClientLandingPage() {
     setPlanMessage(
       `${clientSession.nombre}, dejé listo el flujo para comprar ${planName} con Mercado Pago.`
     );
-    window.open('https://www.mercadopago.cl/', '_blank', 'noopener,noreferrer');
+    window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -450,11 +454,11 @@ function ClientLandingPage() {
                 className={`client-plan-card client-reveal ${plan.highlighted ? 'is-featured' : ''}`}
                 role="button"
                 tabIndex={0}
-                onClick={() => handlePlanPurchase(plan.name)}
+                onClick={() => handlePlanPurchase(plan.name, plan.checkoutUrl)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    handlePlanPurchase(plan.name);
+                    handlePlanPurchase(plan.name, plan.checkoutUrl);
                   }
                 }}
               >

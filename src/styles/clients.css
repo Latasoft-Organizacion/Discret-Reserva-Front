@@ -205,6 +205,27 @@
   margin-top: 22px;
   display: grid;
   gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 10px;
+}
+
+.clients-list::-webkit-scrollbar {
+  height: 10px;
+}
+
+.clients-list::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 999px;
+}
+
+.clients-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #ec4899, #ff4fa3);
+  border-radius: 999px;
+}
+
+.clients-list::-webkit-scrollbar-thumb:hover {
+  background: #ff4fa3;
 }
 
 .clients-empty-state {
@@ -220,6 +241,7 @@
 .client-card {
   display: grid;
   grid-template-columns: 70px minmax(190px, 1.2fr) 90px 140px 145px 120px 170px;
+  min-width: 1120px;
   align-items: center;
   gap: 18px;
   padding: 18px;
@@ -572,6 +594,12 @@
 
   .client-card {
     text-align: center;
+    min-width: 0;
+  }
+
+  .clients-list {
+    overflow-x: visible;
+    padding-bottom: 0;
   }
 
   .client-actions {

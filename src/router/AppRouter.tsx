@@ -27,9 +27,10 @@ function AppRouter() {
         <Route path="/" element={<ClientLandingPage />} />
         <Route path="/registro" element={<ClientRegisterPage />} />
         <Route path="/valoracion" element={<ClientRatingPage />} />
+        <Route path="/valoracion/:token" element={<ClientRatingPage />} />
 
         {/* Formulario de reserva cliente */}
-        <Route path="/reservas-admin" element={<AdminRoute><AdminReservationsPage /></AdminRoute>} />
+        <Route path="/reservas" element={<ReservationsPage />} />
 
         {/* Confirmación de reserva cliente */}
         <Route path="/confirmar-reserva" element={<ConfirmReservationPage />} />
@@ -40,7 +41,7 @@ function AppRouter() {
         {/* Panel administrativo */}
         <Route path="/dashboard" element={<AdminRoute><DashboardPage /></AdminRoute>} />
         <Route path="/habitaciones" element={<AdminRoute><RoomsPage /></AdminRoute>} />
-        <Route path="/reservas" element={<AdminRoute><ReservationsPage /></AdminRoute>} />
+        <Route path="/reservas-admin" element={<AdminRoute><AdminReservationsPage /></AdminRoute>} />
         <Route path="/agenda" element={<AdminRoute><AgendaPage /></AdminRoute>} />
         <Route path="/clientes" element={<AdminRoute><ClientsPage /></AdminRoute>} />
         <Route path="/reportes" element={<AdminRoute><ReportsPage /></AdminRoute>} />
